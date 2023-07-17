@@ -43,7 +43,10 @@
   "autoload": {
     "psr-4": {
       "WebTheory\\Playground\\": "src/"
-    }
+    },
+    "files": [
+      "src/functions.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
