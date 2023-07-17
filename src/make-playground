@@ -1,20 +1,13 @@
 #!/usr/bin/env php
 <?php
 
+use WebTheory\Playground\PlaygroundConfig;
 use WebTheory\Playground\PlaygroundMaker;
 
 $root = getcwd();
 
 require $_composer_autoload_path ?? "{$root}/vendor/autoload.php";
 
-$composer = json_decode(file_get_contents($root . '/composer.json'), true);
-$config = $composer['extra']['playground'];
+$maker = new PlaygroundMaker(new PlaygroundConfig);
 
-$builder = new PlaygroundMaker(
-    $root,
-    $config["contexts"] ?? [],
-    $config["bootstrap"] ?? 'vendor/autoload.php',
-    $config["web-root"] ?? 'public'
-);
-
-$builder->erect();
+$maker->make();

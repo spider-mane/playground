@@ -4,47 +4,28 @@ namespace WebTheory\Playground;
 
 class PlaygroundMaker
 {
-    protected string $root;
+    protected array $defaultContexts = ['console'];
 
-    protected array $contexts;
+    protected string $webContext = 'browser';
 
-    protected string $webRoot;
-
-    protected string $directory = "@playground";
-
-    protected string $defaultContext = "console";
-
-    protected string $webContext = "browser";
-
-    protected string $webLink = "@playground";
-
-    protected string $bootstrapFile;
-
-    /**
-     * Create a new BeginnerClass.
-     */
-    public function __construct(
-        string $root,
-        array $contexts = [],
-        string $bootstrapFile = 'vendor/autoload.php',
-        string $webRoot = 'public'
-    ) {
-        $this->root = $root;
-        $this->contexts = $contexts;
-        $this->bootstrapFile = $bootstrapFile;
-        $this->webRoot = $webRoot;
+    public function __construct(protected PlaygroundConfig $config)
+    {
+        //
     }
 
-    public function erect(): void
+    public function make(): void
     {
-        $root = $this->root;
-        $path = "{$root}/{$this->directory}";
+        $path = $this->config->path();
         $content = $this->getFileContent();
-        $webRoot = "{$root}/{$this->webRoot}";
-        $contexts = [$this->defaultContext, ...$this->contexts];
+        $webRoot = $this->config->webRoot();
+        $webLink = $this->config->webLink();
+        $contexts = [
+            ...$this->getDefaultContexts(),
+            ...$this->config->contexts(),
+        ];
 
         if (!file_exists($path)) {
-            mkdir($path);
+            mkdir($path, 0777, true);
         }
 
         foreach ($contexts as $context) {
@@ -54,9 +35,9 @@ class PlaygroundMaker
                 file_put_contents($file, $content);
             }
 
-            if ($this->webContext === $context && file_exists($webRoot)) {
+            if ($this->getWebContext() === $context && file_exists($webRoot)) {
                 $uri = $uri ?? "@playground";
-                $link = "{$webRoot}/{$this->webLink}.php";
+                $link = "{$webRoot}/{$webLink}.php";
 
                 if (file_exists($link)) {
                     unlink($link);
@@ -67,14 +48,27 @@ class PlaygroundMaker
         }
     }
 
+    protected function getDefaultContexts(): array
+    {
+        return $this->defaultContexts;
+    }
+
+    protected function getWebContext(): string
+    {
+        return $this->webContext;
+    }
+
     protected function getFileContent(): string
     {
+        $levels = $this->config->levels();
+        $script = $this->config->include();
+
         return <<<PHP
         <?php
 
         declare(strict_types=1);
 
-        require_once dirname(__DIR__) . '/{$this->bootstrapFile}';
+        require_once dirname(__DIR__, {$levels}) . '/{$script}';
 
         /**
          *==============================================================================
